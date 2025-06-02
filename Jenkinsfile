@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "duswntmd/TN:1.0"
-        GITHUB_REPO = "https://github.com/duswntmd/TN.git"
-        JAR_FILE = "TN.jar"
-        RELEASE_URL = "https://github.com/duswntmd/TN/releases/download/v1.0.0/TN.jar"
+        DOCKER_IMAGE = "duswntmd/tn:1.0"
+        GITHUB_REPO = "https://github.com/duswntmd/tn.git" // 소문자
+        JAR_FILE = "tn.jar" // 소문자
+        RELEASE_URL = "https://github.com/duswntmd/tn/releases/download/v1.0.0/tn.jar" // 소문자
     }
 
     stages {
@@ -69,8 +69,8 @@ pipeline {
                     echo "Building Docker image..." 
                     writeFile file: 'Dockerfile', text: """
                     FROM openjdk:21-slim
-                    COPY ${JAR_FILE} /TN.jar
-                    CMD ["java", "-jar", "/TN.jar"]
+                    COPY ${JAR_FILE} /tn.jar
+                    CMD ["java", "-jar", "/tn.jar"]
                     """
                     sh "docker build -t ${DOCKER_IMAGE} ."
                     echo "Docker image created!"
