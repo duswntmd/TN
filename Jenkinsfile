@@ -5,14 +5,14 @@ pipeline {
         DOCKER_IMAGE = "duswntmd/TN:1.0"
         GITHUB_REPO = "https://github.com/duswntmd/TN.git"
         JAR_FILE = "TN.jar"
+        RELEASE_URL = "https://github.com/duswntmd/TN/releases/download/v1.0.0/TN.jar"
     }
-//
+
     stages {
-        
+
         stage('Cleanup Workspace') {
             steps {
-                //cleanWs() //삭제하고 다시올리는 코드
-                echo 'Cleaned up' //디버깅 메시지
+                echo 'Cleaned up'
             }
         }
 
@@ -23,15 +23,23 @@ pipeline {
                     $class: 'GitSCM',
                     branches: [[name: 'main']],
                     userRemoteConfigs: [[
-                        credentialsId: 'GitHub_login',       // Jenkins에서 github의 id, pwd를 등록하고 아이디를 'GitHub_ID_PWD' 으로 지정해야 함
+                        credentialsId: 'GitHub_login',
                         url: GITHUB_REPO
                     ]]
                 ])
-                // JAR 파일에 실행 권한 추가
-                sh 'chmod +x ./${JAR_FILE}'
             }
         }
-        
+
+        stage('Download JAR File') {
+            steps {
+                echo 'Downloading JAR file from GitHub Release...'
+                sh """
+                curl -L -o ${JAR_FILE} ${RELEASE_URL}
+                chmod +x ${JAR_FILE}
+                """
+            }
+        }
+
         stage('Prepare JAR File') {
             steps {
                 script {
@@ -40,7 +48,7 @@ pipeline {
                     if [ -f ${JAR_FILE} ]; then
                         echo "JAR file ${JAR_FILE} found."
                     else
-                        echo "JAR file not found. Ensure the project is built correctly."
+                        echo "JAR file not found. Ensure the Release URL is correct."
                         exit 1
                     fi
                     """
@@ -50,13 +58,11 @@ pipeline {
 
         stage('Verify JAR File') {
             steps {
-                script {
-                    echo "Verifying JAR file..."
-                    sh 'ls -l TN.jar'
-                }
+                echo "Verifying JAR file..."
+                sh "ls -l ${JAR_FILE}"
             }
         }
-        
+
         stage('Build Docker Image') {
             steps {
                 script {
@@ -71,21 +77,7 @@ pipeline {
                 }
             }
         }
-        /*
-        stage('Push to Docker Hub') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'Docker_Hub_id_pwd', usernameVariable: 'DOCKER_HUB_CREDENTIALS_USR', passwordVariable: 'DOCKER_HUB_CREDENTIALS_PSW')]) {
-                        echo "Pushing Docker image to Docker Hub..."
-                        sh """
-                        echo ${DOCKER_HUB_CREDENTIALS_PSW} | docker login -u ${DOCKER_HUB_CREDENTIALS_USR} --password-stdin
-                        docker push ${DOCKER_IMAGE}
-                        """
-                    }
-                }
-            }
-        }
-        */
+
         stage('Run Docker Container') {
             steps {
                 script {
@@ -98,12 +90,4 @@ pipeline {
             }
         }
     }
-
-    /*
-    post {
-        always {
-            echo "Cleaning up workspace..."
-            //cleanWs()
-        }
-    }*/
 }
