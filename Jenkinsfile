@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "duswntmd/tn:1.0"
-        GITHUB_REPO = "https://github.com/duswntmd/tn.git" // 소문자
-        JAR_FILE = "tn.jar" // 소문자
-        RELEASE_URL = "https://github.com/duswntmd/tn/releases/download/v1.0.0/tn.jar" // 소문자
+        GITHUB_REPO = "https://github.com/duswntmd/tn.git"
+        JAR_FILE = "tn.jar"
+        RELEASE_URL = "https://github.com/duswntmd/tn/releases/download/v1.0.0/tn.jar"
     }
 
     stages {
@@ -70,6 +70,7 @@ pipeline {
                     writeFile file: 'Dockerfile', text: """
                     FROM openjdk:21-slim
                     COPY ${JAR_FILE} /tn.jar
+                    EXPOSE 80
                     CMD ["java", "-jar", "/tn.jar"]
                     """
                     sh "docker build -t ${DOCKER_IMAGE} ."
@@ -81,10 +82,10 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    echo "Running Docker container..."
+                    echo "Running Docker container on port 80..."
                     sh """
                     docker ps -q --filter 'ancestor=${DOCKER_IMAGE}' | xargs --no-run-if-empty docker stop
-                    docker run -d ${DOCKER_IMAGE}
+                    docker run -d -p 80:80 ${DOCKER_IMAGE}
                     """
                 }
             }
