@@ -85,7 +85,7 @@ pipeline {
                     echo "Running Docker container on port 80..."
                     sh """
                     docker ps -q --filter 'ancestor=${DOCKER_IMAGE}' | xargs --no-run-if-empty docker stop
-                    docker run -d -p 80:80 ${DOCKER_IMAGE}
+                    docker run -d -p 8080:8080 ${DOCKER_IMAGE}
                     """
                 }
             }
