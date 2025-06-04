@@ -8,6 +8,7 @@ pipeline {
         RELEASE_URL = "https://github.com/duswntmd/tn/releases/download/v1.0.0/tn.jar"
         HOST_UPLOAD_DIR = "/home/ubuntu/uploads"
         CONTAINER_UPLOAD_DIR = "/app/uploads"
+        CONTAINER_NAME = "tn_container"
     }
 
     stages {
@@ -43,22 +44,16 @@ pipeline {
             }
         }
 
-        stage('Prepare JAR File') {
-            steps {
-                script {
-                    echo "Checking JAR file..."
-                    sh """
-                        if [ ! -f ${JAR_FILE} ]; then
-                            echo 'JAR file not found. Exiting.'
-                            exit 1
-                        fi
-                    """
-                }
-            }
-        }
-
         stage('Verify JAR File') {
             steps {
+                echo "Checking if JAR file exists..."
+                sh """
+                    if [ ! -f ${JAR_FILE} ]; then
+                        echo 'JAR file not found. Build failed.'
+                        exit 1
+                    fi
+                """
+                echo "Verifying JAR file..."
                 sh "ls -lh ${JAR_FILE}"
             }
         }
@@ -72,7 +67,7 @@ pipeline {
                         COPY ${JAR_FILE} /tn.jar
                         EXPOSE 8080
                         VOLUME ${CONTAINER_UPLOAD_DIR}
-                        CMD [\"java\", \"-jar\", \"/tn.jar\"]
+                        CMD ["java", "-jar", "/tn.jar"]
                     """
                     sh "docker build -t ${DOCKER_IMAGE} ."
                 }
@@ -82,13 +77,14 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    echo "Stopping old container and running new one..."
+                    echo "Stopping and removing any existing container..."
                     sh """
-                        docker ps -q --filter 'ancestor=${DOCKER_IMAGE}' | xargs --no-run-if-empty docker stop
-                        docker run -d \
-                            -p 8080:8080 \
-                            -v ${HOST_UPLOAD_DIR}:${CONTAINER_UPLOAD_DIR} \
-                            --name tn_container \
+                        docker stop ${CONTAINER_NAME} || true
+                        docker rm ${CONTAINER_NAME} || true
+                        docker run -d \\
+                            -p 8080:8080 \\
+                            -v ${HOST_UPLOAD_DIR}:${CONTAINER_UPLOAD_DIR} \\
+                            --name ${CONTAINER_NAME} \\
                             ${DOCKER_IMAGE}
                     """
                 }
