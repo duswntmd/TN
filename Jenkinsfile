@@ -5,7 +5,7 @@ pipeline {
         DOCKER_IMAGE = "duswntmd/tn:1.0"
         GITHUB_REPO = "https://github.com/duswntmd/tn.git"
         JAR_FILE = "tn.jar"
-        RELEASE_URL = "https://github.com/duswntmd/tn/releases/download/v1.0.0/tn.jar"
+        RELEASE_URL = "https://github.com/duswntmd/tn/releases/latest/download/tn.jar"
         HOST_UPLOAD_DIR = "/home/ubuntu/uploads"
         CONTAINER_UPLOAD_DIR = "/app/uploads"
         CONTAINER_NAME = "tn_container"
